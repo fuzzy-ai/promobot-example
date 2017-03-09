@@ -1,0 +1,21 @@
+{
+  "name": "promobot",
+  "version": "1.0.0",
+  "description": "Fuzzy.ai Botkit demo",
+  "main": "lib/bot.js",
+  "scripts": {
+    "dev": "coffee -r dotenv/config src/bot.coffee",
+    "install": "coffee -c -o lib src",
+    "start": "node lib/bot.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "coffeescript": "^1.12.4",
+    "dotenv": "^4.0.0"
+  },
+  "dependencies": {
+    "botkit": "^0.5.1",
+    "fuzzy.ai": "^1.0.2"
+  }
+}
