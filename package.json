@@ -11,11 +11,11 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "coffeescript": "^1.12.4",
     "dotenv": "^4.0.0"
   },
   "dependencies": {
     "botkit": "^0.5.1",
+    "coffeescript": "^1.12.4",
     "fuzzy.ai": "^1.0.2"
   }
 }
