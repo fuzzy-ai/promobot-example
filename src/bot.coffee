@@ -1,5 +1,5 @@
 # bot.coffee
-Botkit = require 'Botkit'
+Botkit = require 'botkit'
 FuzzyAI = require 'fuzzy.ai'
 agent = require './agent'
 
