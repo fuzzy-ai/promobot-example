@@ -104,7 +104,6 @@ promoConvo = (bot, message) ->
       {
         pattern: bot.utterances.no
         callback: (response, convo) ->
-          console.log response, "RESPONSE"
           convo.changeTopic 'user_no_thread'
 
       },
