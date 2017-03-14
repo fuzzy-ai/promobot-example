@@ -133,6 +133,8 @@ promoConvo = (bot, message) ->
               discount = 5 * Math.ceil(outputs['discount'] / 5)
               code = discountToCode(discount)
               bot.reply message, "Use this coupon code: #{code} for #{discount}% off an upgrade!"
+              bot.reply message, "I determined your coupon code using a Fuzzy.ai 'evaluate' call with the inputs: #{JSON.stringify inputs}"
+              bot.reply message, "You can see my full source code on Github: https://github.com/fuzzy-ai/promobot-example"
             else
               bot.reply message, "So nice to talk to you!"
       else
