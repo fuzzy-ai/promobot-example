@@ -28,6 +28,18 @@ controller.setupWebserver process.env.PORT || 3000, (err, server) ->
     console.log "server started!"
 
 controller.api.thread_settings.greeting("Welcome to PromoBot!")
+controller.api.thread_settings.menu([
+  {
+    type: "postback",
+    title: "Start Demo",
+    payload: "start"
+  },
+  {
+    type: "web_url",
+    title: "View Source",
+    url: "https://github.com/fuzzy-ai/promobot-example"
+  }
+  ])
 
 # Main conversation with questions and branching
 promoConvo = (bot, message) ->
