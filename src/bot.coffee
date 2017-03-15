@@ -28,6 +28,7 @@ controller.setupWebserver process.env.PORT || 3000, (err, server) ->
     console.log "server started!"
 
 controller.api.thread_settings.greeting("Welcome to PromoBot!")
+controller.api.thread_settings.get_started('start')
 controller.api.thread_settings.menu([
   {
     type: "postback",
