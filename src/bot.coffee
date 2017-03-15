@@ -43,123 +43,128 @@ controller.api.thread_settings.menu([
   }
   ])
 
-# Main conversation with questions and branching
 promoConvo = (bot, message) ->
-  bot.createConversation message, (err, convo) ->
-    convo.addMessage({
-      text: "I didn't understand that"
-      action: 'default'
-      }, 'default_action')
-
-    convo.addMessage({
-      text: 'What are you waiting for?'
-      action: 'completed'
-    }, 'user_no_thread')
-    convo.addMessage({
-      text: "That's great!"
-      action: 'tutorial_question'
-    },'user_yes_thread')
-
-    convo.addMessage({
-      text: 'You should check it out! https://fuzzy.ai/tutorial'
-      action: 'api_question'
-    }, 'tutorial_no_thread')
-    convo.addMessage({
-      text: 'Great news!'
-      action: 'api_question'
-    }, 'tutorial_yes_thread')
-
-    convo.addQuestion('Have you completed our tutorial?', [
-        {
-          pattern: bot.utterances.no
-          callback: (response, convo) ->
-            convo.changeTopic 'tutorial_no_thread'
-        },
-        {
-          pattern: bot.utterances.yes
-          callback: (response, convo) ->
-            convo.changeTopic 'tutorial_yes_thread'
-        }
-        {
-          default: true,
-          callback: (response, convo) ->
-            convo.changeTopic 'default_action'
-        }
-      ], {key: 'tutorial'}, 'tutorial_question')
-
-    convo.addQuestion({
-      attachment:
-        type: 'template'
-        payload:
-          template_type: 'button'
-          text: 'When was your last API call on fuzzy.ai?'
-          buttons: [
-            {
-              type: 'postback'
-              title: 'Never'
-              payload: 0
-            },
-            {
-              type: 'postback'
-              title: 'In the last week'
-              payload: 7
-            },
-            {
-              type: 'postback'
-              title: "It's been longer"
-              payload: 30
-            }
-          ]
-      }, (response, convo) ->
-        convo.next()
-      , {key: 'lastAPICall'}, 'api_question')
-
-    convo.ask 'Hi! Are you currently a fuzzy.ai user?', [
-      {
-        pattern: bot.utterances.no
-        callback: (response, convo) ->
-          convo.changeTopic 'user_no_thread'
-
-      },
-      {
-        pattern: bot.utterances.yes
-        callback: (response, convo) ->
-          convo.changeTopic 'user_yes_thread'
-      },
-      {
-        default: true,
-        callback: (response, convo) ->
-          convo.changeTopic 'default_action'
-      }
-    ], {'key': 'hasAccount'}
-
-    convo.on 'end', (convo) ->
-      if convo.status == 'completed'
-        responses = convo.extractResponses()
-        inputs = responsesToInputs(responses)
-
-        # Evaluate response
-        client.evaluate AGENT_ID, inputs, (err, outputs) ->
-          if err
-            bot.reply message, "Uh oh, something went wrong."
-          else
-            if outputs['discount'] > 1
-              discount = 5 * Math.ceil(outputs['discount'] / 5)
-              code = discountToCode(discount)
-              bot.reply message, "Use this coupon code: #{code} for #{discount}% off an upgrade!  https://fuzzy.ai/signup?code=#{code}"
-              bot.reply message, "I determined your coupon code using a Fuzzy.ai 'evaluate' call with the inputs: #{JSON.stringify inputs}"
-              bot.reply message, "You can see my full source code on Github: https://github.com/fuzzy-ai/promobot-example"
-            else
-              bot.reply message, "So nice to talk to you!"
-      else
-        bot.reply message, "Thanks for chatting."
-
-    convo.activate()
-
+  bot.startConversation(message, askUser)
 
 # Start the promotion conversation on optin or when the user says "hi"
 controller.on 'facebook_optin', promoConvo
 controller.hears ['hi', 'hello', 'start'], 'message_received', promoConvo
+
+
+askUser = (response, convo) ->
+  convo.ask 'Hi! Are you currently a fuzzy.ai user?', [
+    {
+      pattern: bot.utterances.yes
+      callback: (response, convo) ->
+        convo.say "That's great!"
+        askTutorial response, convo
+        convo.next()
+    },
+    {
+      pattern: bot.utterances.no
+      callback: (response, convo) ->
+        convo.say "What are you waiting for?"
+        runEvaluation convo
+        convo.next()
+    },
+    {
+      default: true
+      callback: (response, convo) ->
+        convo.repeat()
+        convo.next()
+    }
+  ], {key: 'hasAccount'}
+
+askTutorial = (response, convo) ->
+  convo.ask 'Have you completed our tutorial?', [
+    {
+      pattern: bot.utterances.yes
+      callback: (response, convo) ->
+        convo.say "Great news!"
+        askApiUsage(response, convo)
+        convo.next()
+    },
+    {
+      pattern: bot.utterances.no
+      callback: (response, convo) ->
+        convo.say "You should check it out! https://fuzzy.ai/tutorial"
+        askApiUsage(response, convo)
+        convo.next()
+    },
+    {
+      default: true
+      callback: (response, convo) ->
+        convo.repeat()
+        convo.next()
+    }
+  ], {key: 'tutorial'}
+
+askApiUsage = (response, convo) ->
+  convo.ask {
+    attachment:
+      type: 'template'
+      payload:
+        template_type: 'button'
+        text: 'When was your last API call on fuzzy.ai?'
+        buttons: [
+          {
+            type: 'postback'
+            title: 'Never'
+            payload: 0
+          },
+          {
+            type: 'postback'
+            title: 'In the last week'
+            payload: 7
+          },
+          {
+            type: 'postback'
+            title: "It's been longer"
+            payload: 30
+          }
+        ]
+    }, (response, convo) ->
+      runEvaluation(convo)
+      convo.next()
+    , {key: 'lastAPICall'}
+
+runEvaluation = (convo) ->
+  responses = convo.extractResponses()
+  inputs = responsesToInputs(responses)
+
+  # Evaluate response
+  client.evaluate AGENT_ID, inputs, true, (err, outputs) ->
+    if err
+      convo.say "Uh oh, something went wrong."
+    else
+      if outputs['discount'] > 1
+        discount = 5 * Math.ceil(outputs['discount'] / 5)
+        code = discountToCode(discount)
+        convo.say "Use this coupon code: #{code} for #{discount}% off an upgrade!  https://fuzzy.ai/signup?code=#{code}"
+        convo.say "I determined that response using a Fuzzy.ai 'evaluate' call with the inputs: #{JSON.stringify inputs}"
+        askFeedback(convo, outputs['discount'], outputs.meta.reqID)
+      else
+        convo.say "So nice to talk to you!"
+    convo.next()
+
+askFeedback = (convo, discount, eval_id) ->
+  convo.ask 'Will you use the code?', (response, convo) ->
+    if response.text.match(bot.utterances.yes)
+      metrics = {discount: 100 - discount}
+    else if response.text.match(bot.utterances.no)
+      metrics = {discount: 0}
+
+    if metrics
+      client.feedback eval_id, metrics, (err) ->
+        if err
+          convo.say "Oh no! Something went wrong."
+        else
+          convo.say "Thanks for letting us know!"
+          convo.say "We provided feedback to the algorithm: #{JSON.stringify metrics}"
+        convo.say "You can see my full source code on Github: https://github.com/fuzzy-ai/promobot-example"
+    else
+      convo.repeat()
+    convo.next()
 
 # Convert responses to numbers
 responsesToInputs = (inputs) ->
