@@ -142,7 +142,7 @@ runEvaluation = (convo) ->
         code = discountToCode(discount)
         convo.say "Use this coupon code: #{code} for #{discount}% off an upgrade!  https://fuzzy.ai/signup?code=#{code}"
         convo.say "I determined that response using a Fuzzy.ai 'evaluate' call with the inputs: #{JSON.stringify inputs}"
-        askFeedback(convo, outputs['discount'], outputs.meta.reqID)
+        askFeedback(convo, discount, outputs.meta.reqID)
       else
         convo.say "So nice to talk to you!"
     convo.next()
@@ -168,18 +168,18 @@ askFeedback = (convo, discount, eval_id) ->
 
 # Convert responses to numbers
 responsesToInputs = (inputs) ->
-  if inputs['hasAccount']
-    if inputs['hasAccount'].match(bot.utterances.yes)
-      inputs['hasAccount'] = 1
-    else
-      inputs['hasAccount'] = 0
-  if inputs['tutorial']
-    if inputs['tutorial'].match(bot.utterances.yes)
-      inputs['tutorial'] = 1
-    else
-      inputs['tutorial'] = 0
+  if inputs['hasAccount']?.match(bot.utterances.yes)
+    inputs['hasAccount'] = 1
+  else
+    inputs['hasAccount'] = 0
+  if inputs['tutorial']?.match(bot.utterances.yes)
+    inputs['tutorial'] = 1
+  else
+    inputs['tutorial'] = 0
   if inputs['lastAPICall']
     inputs['lastAPICall'] = parseInt(inputs['lastAPICall'])
+  else
+    inputs['lastAPICall'] = 30
   inputs
 
 # Convert API response to Coupon Code
