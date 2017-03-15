@@ -14,9 +14,10 @@ client.putAgent AGENT_ID, agent, (err) ->
 
 # Configure the botkit controller and spawn the bot.
 controller = Botkit.facebookbot
-  debug: true
+  debug: process.env.NODE_ENV != "production"
   log: true
   receive_via_postback: true
+  require_delivery: true
   access_token: process.env.PAGE_TOKEN
   verify_token: process.env.VERIFY_TOKEN
   app_secret: process.env.APP_SECRET
