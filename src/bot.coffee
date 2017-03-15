@@ -119,7 +119,7 @@ askApiUsage = (response, convo) ->
           },
           {
             type: 'postback'
-            title: "It's been longer / never"
+            title: "Longer ago / Never"
             payload: 30
           }
         ]
@@ -160,7 +160,7 @@ askFeedback = (convo, discount, eval_id) ->
           convo.say "Oh no! Something went wrong."
         else
           convo.say "Thanks for letting us know!"
-          convo.say "We provided feedback to the algorithm: #{JSON.stringify metrics}"
+          convo.say "We want to maximize our discount code usage, so we provided the following feedback to the algorithm: #{JSON.stringify metrics}"
         convo.say "You can see my full source code on Github: https://github.com/fuzzy-ai/promobot-example"
     else
       convo.repeat()
