@@ -109,17 +109,17 @@ askApiUsage = (response, convo) ->
         buttons: [
           {
             type: 'postback'
-            title: 'Never'
-            payload: 0
+            title: 'Today'
+            payload: 1
           },
           {
             type: 'postback'
-            title: 'In the last week'
+            title: 'In the past week'
             payload: 7
           },
           {
             type: 'postback'
-            title: "It's been longer"
+            title: "It's been longer / never"
             payload: 30
           }
         ]
